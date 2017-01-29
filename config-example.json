@@ -1,0 +1,5 @@
+{
+    "PPM_PROXY":"some_ssh_host",
+    "PPM_PORT": "local_port",
+    "PPM_PROFILE": "profile_name"
+}
