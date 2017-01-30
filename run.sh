@@ -42,6 +42,8 @@ PPM_CM_BASE_CMD="ssh -S ${PPM_CM_PATH} -O"
 PPM_CM_CHECK="${PPM_CM_BASE_CMD} check ${PPM_PROXY}"
 PPM_CM_CLOSE="${PPM_CM_BASE_CMD} exit ${PPM_PROXY}"
 
+trap 'cleanup 1' SIGHUP SIGINT SIGTERM
+
 if $PPM_TEST_PORT > /dev/null 2>&1; then
     echo "Port ${PPM_PORT} already in use"
     if $PPM_CM_CHECK > /dev/null 2>&1; then
@@ -76,11 +78,10 @@ if [ ! -d "${PPM_PROJECT_DIR}/profiles/${PPM_PROFILE}" ]; then
     fi
 
     cat << EOF >> ${PPM_PROJECT_DIR}/profiles/${PPM_PROFILE}/prefs.js
-    user_pref("network.proxy.socks_port", ${PPM_PORT});
     user_pref("network.proxy.socks", "127.0.0.1");
+    user_pref("network.proxy.socks_port", ${PPM_PORT});
     user_pref("network.proxy.socks_remote_dns", true);
     user_pref("network.proxy.type", 1);
-    user_pref("network.proxy.socks_port", ${PPM_PORT});
 EOF
 fi
 
