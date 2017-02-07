@@ -9,7 +9,7 @@ and CSS can be used to make different sessions visually distinctive.
 
 ```bash
 $ ./run.py -h
-usage: run.py [-h] profile host
+usage: run.py [-h] [-p [N]] profile host
 
 Manages Firefox proxy sessions.
 
@@ -19,6 +19,7 @@ positional arguments:
 
 optional arguments:
   -h, --help  show this help message and exit
+  -p [N]      The port to forward over (default: random)
 ```
 
 When the script is called with a new profile name, a profile using the proxy

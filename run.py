@@ -12,7 +12,7 @@ config = dict()
 
 parser.add_argument('profile', type=str, help='The name of the profile to use')
 parser.add_argument('host', type=str, help='The server to connect to')
-parser.add_argument('-p', type=int, metavar='N', nargs='?', default=0, help='The port to forward over (default=random)')
+parser.add_argument('-p', type=int, metavar='N', nargs='?', default=0, help='The port to forward over (default: random)')
 
 args = parser.parse_args()
 
@@ -24,7 +24,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 cm_path = os.path.join(ssh_dir, args.profile + '_%r@%h:%p')
 ssh_base = ['ssh', '-S', cm_path, args.host]
 cm_connect = ssh_base + ['-fNTM', '-D 127.0.0.1:' + args.p, \
-        '-o ExitOnForwardFailure=yes']
+        '-o', 'ExitOnForwardFailure=yes']
 cm_check = ssh_base + ['-O', 'check', args.host]
 cm_exit = ssh_base + ['-O', 'exit', args.host]
 
