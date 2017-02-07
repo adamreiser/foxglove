@@ -5,27 +5,29 @@ Manages ssh connections and associated Firefox proxy configurations.
 This allows multiple distinct sessions to be run simultaneously. Themes
 and CSS can be used to make different sessions visually distinctive.
 
-## Example Usage
+## Usage
 
-1. Clone this repository as (e.g.) ~/scripts/ppm
+```bash
+$ ./run.py -h
+usage: run.py [-h] profile host
 
-2. Use the config-example.json template to create (e.g.) config.json
+Manages Firefox proxy sessions.
 
-3. Use your preferred method to launch the script; for example, set
-`alias ffproxy="~/scripts/ppm/run.sh ~/scripts/ppm/config.json"`
+positional arguments:
+  profile     The name of the profile to use
+  host        The server to connect to
 
-When ffproxy is first run, a profile using the proxy and containing the
-settings in prefs-base.js will be created. Subsequent invocations with
-the same config.json will use this profile.
+optional arguments:
+  -h, --help  show this help message and exit
+```
 
-- PPM_PROXY - the server to tunnel traffic through; must be able to `ssh server_name`
-- PPM_PROFILE - the profile name to use with firefox; can be anything
-- PPM_PORT - the port to open on localhost to tunnel traffic through.
+When the script is called with a new profile name, a profile using the proxy
+and containing the settings in prefs-base.js will be created. Subsequent
+invocations with that name will use this profile.
 
 prefs-base.js contains some reasonable security and privacy conscious
-configurations, which will be used for the new profile. If you want a
-standard firefox configuration (except for proxy settings) delete or
-comment out the file contents.
+defaults for the new profile. If you want a standard firefox configuration 
+(except for proxy settings) delete or comment out the file contents.
 
 ## Ideas
 - Enforce network isolation using a sandbox.
@@ -34,7 +36,5 @@ normal browser windows.
 
 ## Acknowledgements
 - Some ideas for default settings came from https://ffprofile.com/
-
-- The JSON to environment converter is based on https://gist.github.com/kr/6161118
 
 - Privacy settings were tested with https://browserleaks.com/ip
