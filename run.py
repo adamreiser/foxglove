@@ -47,17 +47,17 @@ prefs_path = os.path.join(profile_dir, 'prefs.js')
 
 # If no prefs file exists, create it
 if not os.path.exists(prefs_path):
-    if os.path.exists(os.path.join(work_dir, 'prefs-base.js')):
-        shutil.copyfile(os.path.join(work_dir, 'prefs-base.js'), prefs_path)
+    if os.path.exists(os.path.join(work_dir, 'prefs.js')):
+        shutil.copyfile(os.path.join(work_dir, 'prefs.js'), prefs_path)
     else:
-        warnings.warn("Could not find prefs-base.js.")
+        warnings.warn("Could not find prefs.js.")
 
-        with open(prefs_path, 'a') as p_file:
-            p_file.write("""user_pref("network.proxy.socks", "127.0.0.1");\n""")
-            p_file.write("""user_pref("network.proxy.socks_port", {});\n""".
-                    format(args.p))
-            p_file.write("""user_pref("network.proxy.socks_remote_dns", true);\n""")
-            p_file.write("""user_pref("network.proxy.type", 1);\n""")
+    with open(prefs_path, 'a') as p_file:
+        p_file.write("""user_pref("network.proxy.socks", "127.0.0.1");\n""")
+        p_file.write("""user_pref("network.proxy.socks_port", {});\n""".
+                format(args.p))
+        p_file.write("""user_pref("network.proxy.socks_remote_dns", true);\n""")
+        p_file.write("""user_pref("network.proxy.type", 1);\n""")
 
 # Update existing prefs with correct port
 else:
