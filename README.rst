@@ -17,6 +17,7 @@ as needed, but if the file doesn't exist, it will be restored using foxglove's d
 values.
 
 foxglove -h::
+
     usage: foxglove [-h] [--port [N]] [-d] [--prefs PATH] profile host
 
     Manages Firefox proxy sessions.
