@@ -15,14 +15,3 @@ intended to be common across profiles. Preferences may be changed during a sessi
 but will revert to the value in prefs.js on the next run. Delete or comment out lines
 as needed, but if the file doesn't exist, it will be restored using foxglove's default
 values.
-
-Installation and usage::
-
- python setup.py sdist
- sudo pip install dist/foxglove-0.0.1-dev1.tar.gz
- foxglove -h
-
-Removal::
-
- sudo pip uninstall foxglove
-
