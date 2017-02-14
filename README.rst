@@ -14,11 +14,11 @@ reasonable security and privacy conscious defaults.
 
 Installation and usage::
 
-python setup.py sdist
-sudo pip install dist/foxglove-0.0.1-dev1.tar.gz
-foxglove -h
+ python setup.py sdist
+ sudo pip install dist/foxglove-0.0.1-dev1.tar.gz
+ foxglove -h
 
 Removal::
 
-sudo pip uninstall foxglove
+ sudo pip uninstall foxglove
 
