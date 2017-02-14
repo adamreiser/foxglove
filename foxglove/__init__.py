@@ -11,6 +11,7 @@ from shutil import copyfile
 def main():
     pkg_dir = os.path.split(os.path.abspath(__file__))[0]
 
+    # TODO: make sure we're not appropriating someone else's directory
     work_dir = os.path.join(os.environ['HOME'], '.foxglove')
 
     if not os.path.isdir(work_dir):
@@ -29,8 +30,8 @@ def main():
             description='Manages Firefox proxy sessions.')
 
     parser.add_argument('profile',
-                        type=str, help='The name of the profile to use')
-    parser.add_argument('host', type=str, help='The server to connect to')
+                        type=str, help='Firefox profile name')
+    parser.add_argument('host', type=str, help='The server to proxy through')
 
     # TODO: port range
     parser.add_argument('--port', type=int,
@@ -41,8 +42,8 @@ def main():
                         help='Dry run (don\'t launch browser)')
     parser.add_argument('--prefs', metavar='PATH',
                         default=os.path.join(work_dir, 'prefs.js'),
-                        help="Path to the base preferences file (default: {})"
-                        .format(os.path.join(work_dir, 'prefs.js')))
+                        help="Path to the common preferences file \
+                        (default: ~/.foxglove/prefs.js)")
 
     args = parser.parse_args()
 
