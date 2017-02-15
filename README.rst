@@ -15,20 +15,3 @@ intended to be common across profiles. Preferences may be changed during a sessi
 but will revert to the value in prefs.js on the next run. Delete or comment out lines
 as needed, but if the file doesn't exist, it will be restored using foxglove's default
 values.
-
-foxglove -h::
-
-    usage: foxglove [-h] [--port [N]] [-d] [--prefs PATH] profile host
-
-    Manages Firefox proxy sessions.
-
-    positional arguments:
-      profile       The name of the profile to use
-      host          The server to connect to
-
-    optional arguments:
-      -h, --help    show this help message and exit
-      --port [N]    The port to forward over (default: random)
-      -d            Dry run (don't launch browser)
-      --prefs PATH  Path to the base preferences file (default:
-                    ~/.foxglove/prefs.js)

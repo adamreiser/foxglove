@@ -37,9 +37,6 @@ user_pref("network.cookie.cookieBehavior", 1);
 user_pref("network.dns.disablePrefetch", true);
 user_pref("network.http.referer.spoofSource", true);
 user_pref("network.prefetch-next", false);
-user_pref("network.proxy.socks", "127.0.0.1");
-user_pref("network.proxy.socks_remote_dns", true);
-user_pref("network.proxy.type", 1)
 user_pref("privacy.donottrackheader.enabled", true);
 user_pref("privacy.donottrackheader.value", 1);
 user_pref("privacy.resistFingerprinting", true);
