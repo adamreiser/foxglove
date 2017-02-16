@@ -23,7 +23,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.1.dev3',
+    version='0.0.1.dev4',
 
     description='Firefox proxy profile manager',
     long_description=long_description,
@@ -44,7 +44,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 1 - Planning',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
@@ -84,9 +84,12 @@ setup(
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
-    package_data={
-        'foxglove': ['prefs.js'],
-    },
+
+    include_package_data=True,
+
+    #package_data={
+    #    'foxglove': ['prefs.js', 'addons.txt'],
+    #},
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow

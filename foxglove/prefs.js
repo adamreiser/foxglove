@@ -23,8 +23,6 @@ user_pref("datareporting.policy.dataSubmissionEnabled", false);
 user_pref("dom.battery.enabled", false);
 user_pref("dom.indexedDB.enabled", false);
 user_pref("extensions.getAddons.cache.enabled", false);
-user_pref("extensions.greasemonkey.stats.optedin", false);
-user_pref("extensions.greasemonkey.stats.url", "");
 user_pref("extensions.shownSelectionUI", true);
 user_pref("general.warnOnAboutConfig", false);
 user_pref("geo.enabled", false);

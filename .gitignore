@@ -1,5 +1,3 @@
-venv
-etc
 # general things to ignore
 build/
 dist/

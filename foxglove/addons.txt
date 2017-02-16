@@ -1,0 +1,4 @@
+# addons to install
+ublock-origin/addon-607454-latest.xpi
+https-everywhere/addon-229918-latest.xpi
+#dark-background-light-text/addon-497798-latest.xpi

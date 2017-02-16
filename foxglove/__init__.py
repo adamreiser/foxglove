@@ -5,7 +5,9 @@ import socket
 import argparse
 import tempfile
 import mozprofile
+import foxglove.helper
 from shutil import copyfile
+import glob
 
 
 def main():
@@ -13,16 +15,6 @@ def main():
 
     # TODO: make sure we're not appropriating someone else's directory
     work_dir = os.path.join(os.environ['HOME'], '.foxglove')
-
-    if not os.path.isdir(work_dir):
-        os.mkdir(work_dir, 0o700)
-
-    if not os.path.isdir(os.path.join(work_dir, 'profiles')):
-        os.mkdir(os.path.join(work_dir, 'profiles'), 0o700)
-
-    if not os.path.exists(os.path.join(work_dir, 'prefs.js')):
-        copyfile(os.path.join(pkg_dir, 'prefs.js'),
-                 os.path.join(work_dir, 'prefs.js'))
 
     parser = argparse.ArgumentParser(description='Manages Firefox profiles')
 
@@ -51,29 +43,64 @@ def main():
                              (default: {})".format(os.path.join(
                              '~', '.foxglove', 'prefs.js')))
 
+    # Parse args before writing to disk (in case of error or -h)
     args = parser.parse_args()
 
-    assert(os.path.exists(args.prefs))
+    # TODO: All this should really be done on install
+    # Create the working directory
+    if not os.path.isdir(work_dir):
+        os.mkdir(work_dir, 0o700)
 
-    if args.port == 0:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(('127.0.0.1', args.port))
-        args.port = s.getsockname()[1]
-        s.close()
+    # Create profiles subdirectory
+    if not os.path.isdir(os.path.join(work_dir, 'profiles')):
+        os.mkdir(os.path.join(work_dir, 'profiles'), 0o700)
+
+    # Copy these files to the working directory
+    for data_file in ['prefs.js', 'addons.txt']:
+        if not os.path.exists(os.path.join(work_dir, data_file)):
+            copyfile(os.path.join(pkg_dir, data_file),
+                     os.path.join(work_dir, data_file))
+
+    # Create directory for add-on preferences
+    if not os.path.isdir(os.path.join(work_dir, 'addon_prefs')):
+        os.mkdir(os.path.join(work_dir, 'addon_prefs'), 0o700)
+
+    # Populate addon preferences
+    for pref in glob.glob(os.path.join(pkg_dir, 'addon*.js')):
+        if not os.path.exists(os.path.join(work_dir, 'addon_prefs',
+                              os.path.basename(pref))):
+            copyfile(pref, os.path.join(work_dir, 'addon_prefs',
+                                        os.path.basename(pref)))
+
+    assert(os.path.exists(args.prefs))
 
     # Set up profile
     profile_dir = os.path.join(work_dir, 'profiles', args.profile)
 
     if not os.path.isdir(profile_dir):
         os.mkdir(profile_dir, 0o700)
+        # Temporary solution:
+        # mozprofile downloads add-ons even if they're already installed,
+        # which results in long startup times. TODO: check if add-on is
+        # installed, rather than just whether profile exists.
+        # Make sure to still update add-on preferences even when not
+        # installing add-ons.
+        install_addons = True
+    else:
+        install_addons = False
 
-    # Preferences set in common prefs.js will stick across reloads
+    # Preferences set in prefs.js persist across reloads
     prefs_obj = mozprofile.prefs.Preferences()
     prefs_obj.add(prefs_obj.read_prefs(args.prefs))
     prefs_dict = dict(prefs_obj._prefs)
 
     # If host is specified, do proxy
     if args.host:
+        if args.port == 0:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind(('127.0.0.1', args.port))
+            args.port = s.getsockname()[1]
+            s.close()
         ssh_dir = tempfile.mkdtemp()
         cm_path = os.path.join(ssh_dir, args.profile + '_%r@%h:%p')
         ssh_base = ['ssh', '-S', cm_path, args.host]
@@ -96,13 +123,36 @@ def main():
             'network.proxy.type': 1
         })
 
-    # No proxy - use system proxy settings
+        # No proxy - use system proxy settings (TODO: make configurable)
     else:
         prefs_dict.update({'network.proxy.type': 5})
 
+    # Read list of add-ons to install
+    with open(os.path.join(work_dir, 'addons.txt')) as addons_file:
+        addons_list = addons_file.read().splitlines()
+
+    # Filter comments
+    addons_list = [i for i in addons_list if i[0] != '#']
+
+    addons_links = ['https://addons.mozilla.org/firefox/downloads/latest/{} \
+            '.format(i) for i in addons_list]
+
+    # Update add-on preferences
+    for addon in addons_list:
+        addon_prefs_file = foxglove.helper.get_addon_pref_file(work_dir, addon)
+
+        if os.path.exists(addon_prefs_file):
+            prefs_obj.add(prefs_obj.read_prefs(addon_prefs_file))
+            prefs_dict.update(dict(prefs_obj._prefs))
+
     # The assignment is necessary even though we don't use mod_profile
-    mod_profile = mozprofile.FirefoxProfile(profile=profile_dir,
-                                            preferences=prefs_dict)
+    if install_addons:
+        mod_profile = mozprofile.FirefoxProfile(profile=profile_dir,
+                                                preferences=prefs_dict,
+                                                addons=addons_links)
+    else:
+        mod_profile = mozprofile.FirefoxProfile(profile=profile_dir,
+                                                preferences=prefs_dict)
 
     if (not args.d):
         subprocess.call(['firefox', '--new-instance',
