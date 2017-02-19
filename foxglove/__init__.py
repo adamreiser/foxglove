@@ -34,6 +34,7 @@ def main():
                         help='The local port to forward the proxy over \
                              (default: random)')
 
+    # Note that this will prevent the profile from being saved
     parser.add_argument('-d', action="store_true", default=False,
                         help='Dry run (don\'t launch browser)')
 
@@ -80,7 +81,7 @@ def main():
     if not os.path.isdir(profile_dir):
         os.mkdir(profile_dir, 0o700)
         # Temporary solution:
-        # mozprofile downloads add-ons even if they're already installed,
+        # mozprofile.Profile() downloads add-ons even if they're installed,
         # which results in long startup times. TODO: check if add-on is
         # installed, rather than just whether profile exists.
         # Make sure to still update add-on preferences even when not
@@ -96,11 +97,13 @@ def main():
 
     # If host is specified, do proxy
     if args.host:
+        # Get a random port
         if args.port == 0:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.bind(('127.0.0.1', args.port))
             args.port = s.getsockname()[1]
             s.close()
+
         ssh_dir = tempfile.mkdtemp()
         cm_path = os.path.join(ssh_dir, args.profile + '_%r@%h:%p')
         ssh_base = ['ssh', '-S', cm_path, args.host]
@@ -115,7 +118,7 @@ def main():
         # Connect to proxy
         subprocess.check_call(cm_connect)
 
-        # Set proxy args if using one
+        # Set proxy prefs
         prefs_dict.update({
             'network.proxy.socks_port': args.port,
             'network.proxy.socks': '127.0.0.1',
@@ -123,7 +126,7 @@ def main():
             'network.proxy.type': 1
         })
 
-        # No proxy - use system proxy settings (TODO: make configurable)
+    # No proxy - use system proxy (TODO: make configurable)
     else:
         prefs_dict.update({'network.proxy.type': 5})
 
@@ -134,8 +137,11 @@ def main():
     # Filter comments
     addons_list = [i for i in addons_list if i[0] != '#']
 
-    addons_links = ['https://addons.mozilla.org/firefox/downloads/latest/{} \
-            '.format(i) for i in addons_list]
+    if install_addons:
+        addons_links = ['https://addons.mozilla.org/firefox/downloads/latest/{} \
+                '.format(i) for i in addons_list]
+    else:
+        addons_links = None
 
     # Update add-on preferences
     for addon in addons_list:
@@ -145,14 +151,10 @@ def main():
             prefs_obj.add(prefs_obj.read_prefs(addon_prefs_file))
             prefs_dict.update(dict(prefs_obj._prefs))
 
-    # The assignment is necessary even though we don't use mod_profile
-    if install_addons:
-        mod_profile = mozprofile.FirefoxProfile(profile=profile_dir,
-                                                preferences=prefs_dict,
-                                                addons=addons_links)
-    else:
-        mod_profile = mozprofile.FirefoxProfile(profile=profile_dir,
-                                                preferences=prefs_dict)
+    mozprofile.FirefoxProfile(profile=profile_dir,
+                              preferences=prefs_dict,
+                              addons=addons_links,
+                              restore=False)
 
     if (not args.d):
         subprocess.call(['firefox', '--new-instance',
