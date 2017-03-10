@@ -1,7 +1,4 @@
-from os.path import join
-from os.path import splitext
-from os.path import normpath
-from os.path import split
+from os.path import join, splitext, normpath, split
 
 
 def get_addon_pref_file(work_dir, addon):

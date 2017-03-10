@@ -39,5 +39,6 @@ user_pref("privacy.donottrackheader.enabled", true);
 user_pref("privacy.donottrackheader.value", 1);
 user_pref("privacy.resistFingerprinting", true);
 user_pref("privacy.trackingprotection.enabled", true);
+user_pref("privacy.trackingprotection.introCount", 20);
 user_pref("privacy.trackingprotection.pbmode.enabled", true);
 user_pref("toolkit.telemetry.enabled", false);

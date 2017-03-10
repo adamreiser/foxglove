@@ -95,7 +95,7 @@ def main():
     prefs_obj.add(prefs_obj.read_prefs(args.prefs))
     prefs_dict = dict(prefs_obj._prefs)
 
-    # If host is specified, do proxy
+    # If host option is specified, set up proxy
     if args.host:
         # Get a random port
         if args.port == 0:
@@ -125,10 +125,6 @@ def main():
             'network.proxy.socks_remote_dns': True,
             'network.proxy.type': 1
         })
-
-    # No proxy - use system proxy (TODO: make configurable)
-    else:
-        prefs_dict.update({'network.proxy.type': 5})
 
     # Read list of add-ons to install
     with open(os.path.join(work_dir, 'addons.txt')) as addons_file:
