@@ -2,6 +2,7 @@
    Default preferences for new profiles
    */
 user_pref("beacon.enabled", false);
+user_pref("beacon.enabled", false);
 user_pref("browser.customizemode.tip0.shown", true);
 user_pref("browser.disableResetPrompt", true);
 user_pref("browser.reader.detectedFirstArticle", true);
@@ -22,6 +23,7 @@ user_pref("datareporting.healthreport.uploadEnabled", false);
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
 user_pref("dom.battery.enabled", false);
 user_pref("dom.indexedDB.enabled", false);
+user_pref("experiments.enabled", false);
 user_pref("extensions.getAddons.cache.enabled", false);
 user_pref("extensions.shownSelectionUI", true);
 user_pref("general.warnOnAboutConfig", false);
@@ -31,6 +33,7 @@ user_pref("media.navigator.enabled", false);
 user_pref("media.peerconnection.enabled", false);
 user_pref("media.video_stats.enabled", false);
 user_pref("middlemouse.contentLoadURL", false);
+user_pref("network.allow-experiments", false);
 user_pref("network.cookie.cookieBehavior", 1);
 user_pref("network.dns.disablePrefetch", true);
 user_pref("network.http.referer.spoofSource", true);
