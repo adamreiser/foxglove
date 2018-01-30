@@ -2,12 +2,14 @@
    Default preferences for new profiles
    */
 user_pref("beacon.enabled", false);
-user_pref("beacon.enabled", false);
 user_pref("browser.customizemode.tip0.shown", true);
 user_pref("browser.disableResetPrompt", true);
 user_pref("browser.reader.detectedFirstArticle", true);
 user_pref("browser.fixup.alternate.enabled", false);
 user_pref("browser.newtab.preload", false);
+user_pref("browser.newtabpage.activity-stream.disableSnippets", true);
+user_pref("browser.newtabpage.activity-stream.enabled", false);
+user_pref("browser.newtabpage.activity-stream.showSponsored", false);
 user_pref("browser.newtabpage.enabled", false);
 user_pref("browser.newtabpage.enhanced", false);
 user_pref("browser.newtabpage.introShown", true);
@@ -21,10 +23,13 @@ user_pref("browser.urlbar.trimURLs", false);
 user_pref("datareporting.healthreport.service.enabled", false);
 user_pref("datareporting.healthreport.uploadEnabled", false);
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
+user_pref("dom.event.clipboardevents.enabled", false);
 user_pref("dom.battery.enabled", false);
 user_pref("dom.indexedDB.enabled", false);
 user_pref("experiments.enabled", false);
+user_pref("experiments.supported", false);
 user_pref("extensions.getAddons.cache.enabled", false);
+user_pref("extensions.pocket.enabled", false);
 user_pref("extensions.shownSelectionUI", true);
 user_pref("general.warnOnAboutConfig", false);
 user_pref("geo.enabled", false);
