@@ -4,10 +4,11 @@ import atexit
 import socket
 import argparse
 import tempfile
-import mozprofile
-import foxglove.helper
 from shutil import copyfile
 import glob
+from io import BytesIO
+import requests
+import mozprofile
 
 
 def main():
@@ -67,30 +68,26 @@ def main():
         os.mkdir(os.path.join(work_dir, 'addon_prefs'), 0o700)
 
     # Populate addon preferences
-    for pref in glob.glob(os.path.join(pkg_dir, 'addon*.js')):
+    for pref in glob.glob(os.path.join(pkg_dir, 'addon_prefs', '*.js')):
         if not os.path.exists(os.path.join(work_dir, 'addon_prefs',
-                              os.path.basename(pref))):
+                                           os.path.basename(pref))):
             copyfile(pref, os.path.join(work_dir, 'addon_prefs',
                                         os.path.basename(pref)))
 
-    assert(os.path.exists(args.prefs))
+    assert os.path.exists(args.prefs)
 
     # Set up profile
     profile_dir = os.path.join(work_dir, 'profiles', args.profile)
 
     if not os.path.isdir(profile_dir):
         os.mkdir(profile_dir, 0o700)
-        # Temporary solution:
-        # mozprofile.Profile() downloads add-ons even if they're installed,
-        # which results in long startup times. TODO: check if add-on is
-        # installed, rather than just whether profile exists.
-        # Make sure to still update add-on preferences even when not
-        # installing add-ons.
+        # Only install add-ons on new profile creation
         install_addons = True
     else:
         install_addons = False
 
     # Preferences set in prefs.js persist across reloads
+    # Add-on prefs do not, however (FIXME?)
     prefs_obj = mozprofile.prefs.Preferences()
     prefs_obj.add(prefs_obj.read_prefs(args.prefs))
     prefs_dict = dict(prefs_obj._prefs)
@@ -126,32 +123,51 @@ def main():
             'network.proxy.type': 1
         })
 
-    # Read list of add-ons to install
-    with open(os.path.join(work_dir, 'addons.txt')) as addons_file:
-        addons_list = addons_file.read().splitlines()
-
-    # Filter comments
-    addons_list = [i for i in addons_list if i[0] != '#']
+    addons_paths = []
 
     if install_addons:
-        addons_links = ['https://addons.mozilla.org/firefox/downloads/latest/{} \
-                '.format(i) for i in addons_list]
-    else:
-        addons_links = None
+        # Read list of add-ons to install
+        with open(os.path.join(work_dir, 'addons.txt')) as addons_file:
+            addons_list = addons_file.read().splitlines()
 
-    # Update add-on preferences
-    for addon in addons_list:
-        addon_prefs_file = foxglove.helper.get_addon_pref_file(work_dir, addon)
+        # Filter comments
+        addons_list = [i for i in addons_list if i[0] != '#']
 
-        if os.path.exists(addon_prefs_file):
-            prefs_obj.add(prefs_obj.read_prefs(addon_prefs_file))
-            prefs_dict.update(dict(prefs_obj._prefs))
+        # mozprofile >=1.0.0 doesn't support automatic XPI downloading
+        for addon_name in addons_list:
+            r = requests.get(
+                'https://addons.mozilla.org/firefox/downloads/latest/{}/'
+                .format(addon_name), stream=True)
+
+            if r.status_code == 200:
+                handle, name = tempfile.mkstemp(suffix=".xpi")
+                addons_paths.append(name)
+                addon_io = BytesIO()
+                for chunk in r.iter_content(chunk_size=1024):
+                    addon_io.write(chunk)
+                addon_content = addon_io.getvalue()
+                addon_io.close()
+                os.write(handle, addon_content)
+                os.close(handle)
+
+                addon_prefs_file = os.path.join(work_dir, 'addon_prefs',
+                                                '{}.js'.format(addon_name))
+
+                # TODO error handling
+
+                # Set addon-specific prefs
+                if os.path.exists(addon_prefs_file):
+                    prefs_obj.add(prefs_obj.read_prefs(addon_prefs_file))
+                    prefs_dict.update(dict(prefs_obj._prefs))
 
     mozprofile.FirefoxProfile(profile=profile_dir,
                               preferences=prefs_dict,
-                              addons=addons_links,
+                              addons=addons_paths,
                               restore=False)
 
-    if (not args.d):
+    for addon_path in addons_paths:
+        os.unlink(addon_path)
+
+    if not args.d:
         subprocess.call(['firefox', '--new-instance',
                          '--no-remote', '--profile', profile_dir])
