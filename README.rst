@@ -1,5 +1,5 @@
 Foxglove - a firefox proxy profile manager
-=======================
+==========================================
 
 Foxglove is a Firefox profile and ssh connection manager with two purposes:
 
