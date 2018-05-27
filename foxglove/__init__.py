@@ -29,21 +29,9 @@ def main():
                              the server and configure the browser to use \
                              it as a SOCKS proxy.')
 
-    # TODO: port range
-    parser.add_argument('--port', type=int,
-                        metavar='N', nargs='?', default=0,
-                        help='The local port to forward the proxy over \
-                             (default: random)')
-
     # Note that this will prevent the profile from being saved
     parser.add_argument('-d', action="store_true", default=False,
                         help='Dry run (don\'t launch browser)')
-
-    parser.add_argument('--prefs', metavar='PATH',
-                        default=os.path.join(work_dir, 'prefs.js'),
-                        help="Path to the common preferences file \
-                             (default: {})".format(os.path.join(
-                             '~', '.foxglove', 'prefs.js')))
 
     # Parse args before writing to disk (in case of error or -h)
     args = parser.parse_args()
@@ -74,8 +62,6 @@ def main():
             copyfile(pref, os.path.join(work_dir, 'addon_prefs',
                                         os.path.basename(pref)))
 
-    assert os.path.exists(args.prefs)
-
     # Set up profile
     profile_dir = os.path.join(work_dir, 'profiles', args.profile)
 
@@ -89,22 +75,20 @@ def main():
     # Preferences set in prefs.js persist across reloads
     # Add-on prefs do not, however (FIXME?)
     prefs_obj = mozprofile.prefs.Preferences()
-    prefs_obj.add(prefs_obj.read_prefs(args.prefs))
-    prefs_dict = dict(prefs_obj._prefs)
+    prefs_obj.add(prefs_obj.read_prefs(os.path.join(work_dir, 'prefs.js')))
 
-    # If host option is specified, set up proxy
+    # If host option is specified, connect to proxy
     if args.host:
-        # Get a random port
-        if args.port == 0:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.bind(('127.0.0.1', args.port))
-            args.port = s.getsockname()[1]
-            s.close()
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # 0 = random
+        s.bind(('127.0.0.1', 0))
+        port = s.getsockname()[1]
+        s.close()
 
         ssh_dir = tempfile.mkdtemp()
         cm_path = os.path.join(ssh_dir, args.profile + '_%r@%h:%p')
         ssh_base = ['ssh', '-S', cm_path, args.host]
-        cm_connect = ssh_base + ['-fNTM', '-D 127.0.0.1:' + str(args.port),
+        cm_connect = ssh_base + ['-fNTM', '-D 127.0.0.1:' + str(port),
                                  '-o', 'ExitOnForwardFailure=yes']
         cm_exit = ssh_base + ['-O', 'exit', args.host]
 
@@ -116,8 +100,8 @@ def main():
         subprocess.check_call(cm_connect)
 
         # Set proxy prefs
-        prefs_dict.update({
-            'network.proxy.socks_port': args.port,
+        prefs_obj.add({
+            'network.proxy.socks_port': port,
             'network.proxy.socks': '127.0.0.1',
             'network.proxy.socks_remote_dns': True,
             'network.proxy.type': 1
@@ -158,10 +142,9 @@ def main():
                 # Set addon-specific prefs
                 if os.path.exists(addon_prefs_file):
                     prefs_obj.add(prefs_obj.read_prefs(addon_prefs_file))
-                    prefs_dict.update(dict(prefs_obj._prefs))
 
     mozprofile.FirefoxProfile(profile=profile_dir,
-                              preferences=prefs_dict,
+                              preferences=prefs_obj._prefs,
                               addons=addons_paths,
                               restore=False)
 
