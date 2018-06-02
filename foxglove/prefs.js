@@ -19,6 +19,7 @@ user_pref("browser.search.suggest.enabled", false);
 user_pref("browser.selfsupport.url", "");
 user_pref("browser.send_pings", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
+user_pref("browser.startup.homepage", "about:blank");
 user_pref("browser.startup.homepage_override.mstone", "9001.0.0");
 user_pref("browser.toolbarbuttons.introduced.pocket-button", true);
 user_pref("browser.urlbar.trimURLs", false);
