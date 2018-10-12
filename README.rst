@@ -3,29 +3,34 @@ Foxglove - a firefox proxy profile manager
 
 Foxglove is a combined Firefox profile and ssh connection manager with two purposes:
 
-1. Quick creation of profiles from a template.
+1. Quick creation of Firefox profiles from a template.
 
-2. ssh into a server and automatically configure a Firefox session to SOCKS
+2. ssh into a server and automatically configure Firefox to SOCKS
    proxy through that connection.
 
 For the first case, simply call foxglove with the profile name: foxglove
 newprofile
 
-To add a proxy server, just include it as the second argument: foxglove newprofile jumphost
+To add a proxy server, include it as the second argument: foxglove newprofile host
 
-Obviously you must be able to ssh into jumphost for this to work. Foxglove will
-do this automatically and tear down the connection when Firefox quits.
+Obviously you must be able to ssh into "host" for this to work. Foxglove will
+do this automatically, configure the profile to use the connection as a proxy,
+and tear down the connection when Firefox quits.
 
-Foxglove will invoke 'firefox' using normal path resolution. Prepending a
-directory to PATH allows you to select the version in that directory. This is
-useful for switching between releases (e.g., ESR, regular, and Beta)
+Foxglove launches the browser via a subprocess call to "firefox". Setting PATH
+prior to running foxglove can be used to launch a specific version of Firefox.
 
-self-explanatory. prefs.js contains some reasonable security and privacy
-conscious defaults that may be changed as needed. Preferences may also be
-changed during a session, but will reset to the value in prefs.js on the next
-run.  Add-on preferences (specified in addon_prefs/NAME.js, with NAME
-corresponding to a line in addons.txt) are set only on new profile creation,
-when add-ons are installed.
+All foxglove data including profiles is stored in .foxglove in your home
+directory, which will be created on first run. Foxglove will not touch your
+regular Firefox profiles in any way.
 
-Note that if prefs.js and addons.txt are not found in ~/.foxglove, they may be
-re-created.
+prefs.js contains some reasonable security and privacy conscious defaults that
+will be applied to all foxglove profiles and may be changed as needed.
+Preferences may also be changed during a session, but will reset to the value
+in prefs.js on the next run.
+
+Note that if prefs.js or addons.txt are not found in .foxglove (which should be
+in your home directory), they will be added from the package install directory
+the next time foxglove is run. Foxglove updates will not overwrite the home
+directory files, so you can delete them or merge your customizations after
+updating foxglove.

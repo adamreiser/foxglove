@@ -33,6 +33,7 @@ user_pref("experiments.enabled", false);
 user_pref("experiments.supported", false);
 user_pref("extensions.getAddons.cache.enabled", false);
 user_pref("extensions.pocket.enabled", false);
+user_pref("extensions.screenshots.upload-disabled", true);
 user_pref("extensions.shownSelectionUI", true);
 user_pref("general.warnOnAboutConfig", false);
 user_pref("geo.enabled", false);
