@@ -1,6 +1,7 @@
 /*
    Default preferences for new profiles
    */
+user_pref("app.shield.optoutstudies.enabled", false);
 user_pref("beacon.enabled", false);
 user_pref("browser.customizemode.tip0.shown", true);
 user_pref("browser.disableResetPrompt", true);
@@ -10,7 +11,12 @@ user_pref("browser.library.activity-stream.enabled", false);
 user_pref("browser.newtab.preload", false);
 user_pref("browser.newtabpage.activity-stream.disableSnippets", true);
 user_pref("browser.newtabpage.activity-stream.enabled", false);
+user_pref("browser.newtabpage.activity-stream.feeds.section.highlights", false);
+user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
+user_pref("browser.newtabpage.activity-stream.section.highlights.includePocket", false);
+user_pref("browser.newtabpage.activity-stream.showSearch", false);
 user_pref("browser.newtabpage.activity-stream.showSponsored", false);
+user_pref("browser.newtabpage.activity-stream.showTopSites", false);
 user_pref("browser.newtabpage.activity-stream.telemetry", false);
 user_pref("browser.newtabpage.enabled", false);
 user_pref("browser.newtabpage.enhanced", false);
