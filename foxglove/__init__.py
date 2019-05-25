@@ -70,7 +70,9 @@ def main():
     if not os.path.isdir(profile_dir):
         os.mkdir(profile_dir, 0o700)
         # Only install add-ons on new profile creation
-        install_addons = True
+        # FIXME automated add-on install is broken at present
+        # install_addons = True
+        install_addons = False
     else:
         install_addons = False
 
