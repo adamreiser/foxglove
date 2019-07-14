@@ -1,6 +1,7 @@
 /*
    Default preferences for new profiles
    */
+user_pref("app.normandy.enabled", false);
 user_pref("app.shield.optoutstudies.enabled", false);
 user_pref("beacon.enabled", false);
 user_pref("browser.customizemode.tip0.shown", true);
@@ -26,8 +27,8 @@ user_pref("datareporting.healthreport.uploadEnabled", false);
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
 user_pref("dom.event.clipboardevents.enabled", false);
 user_pref("dom.battery.enabled", false);
-user_pref("dom.indexedDB.enabled", false);
 user_pref("experiments.enabled", false);
+user_pref("extensions.htmlaboutaddons.recommendations.enabled", false);
 user_pref("experiments.supported", false);
 user_pref("extensions.getAddons.cache.enabled", false);
 user_pref("extensions.pocket.enabled", false);
@@ -47,7 +48,7 @@ user_pref("network.dns.disablePrefetch", true);
 user_pref("network.http.referer.spoofSource", true);
 user_pref("network.predictor.enabled", false);
 user_pref("network.prefetch-next", false);
-user_pref("network.trr.mode", 5);
+user_pref("network.trr.mode", 0);
 user_pref("privacy.donottrackheader.enabled", true);
 user_pref("privacy.donottrackheader.value", 1);
 user_pref("privacy.resistFingerprinting", true);
