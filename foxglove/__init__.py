@@ -5,7 +5,7 @@ import atexit
 import socket
 import argparse
 import tempfile
-from shutil import copyfile
+from shutil import copyfile, rmtree
 import glob
 from io import BytesIO
 import requests
@@ -22,6 +22,10 @@ def main():
     parser = argparse.ArgumentParser(description='Foxglove - a Firefox \
                                      profile and proxy manager.')
 
+    parser.add_argument('--config', metavar="file", type=str, nargs='?',
+                        default=None, help="Path to an alternate ssh_config \
+                        file to use")
+
     parser.add_argument('profile', type=str,
                         help="The name of an existing foxglove profile \
                               or the name of the new profile to create.")
@@ -35,6 +39,9 @@ def main():
     # Note that this will prevent the profile from being saved
     parser.add_argument('-d', action="store_true", default=False,
                         help='Dry run (don\'t launch browser)')
+
+    parser.add_argument('-e', action="store_true", default=False,
+                        help='Ephemeral profile (delete on normal exit)')
 
     # Parse args before writing to disk (in case of error or -h)
     args = parser.parse_args()
@@ -96,6 +103,10 @@ def main():
         ssh_dir = tempfile.mkdtemp()
         cm_path = os.path.join(ssh_dir, args.profile + '_%r@%h:%p')
         ssh_base = ['ssh', '-S', cm_path, args.host]
+
+        if args.config is not None:
+            ssh_base += ['-F', args.config]
+
         cm_connect = ssh_base + ['-fNTM', '-D 127.0.0.1:{:d}'.format(port),
                                  '-o', 'ExitOnForwardFailure=yes']
         cm_exit = ssh_base + ['-O', 'exit', args.host]
@@ -103,6 +114,9 @@ def main():
         # Exit functions run in reverse order
         atexit.register(os.rmdir, ssh_dir)
         atexit.register(subprocess.call, cm_exit)
+
+        if args.e:
+            atexit.register(rmtree, profile_dir)
 
         # Connect to proxy
         if subprocess.check_call(cm_connect) != 0:
