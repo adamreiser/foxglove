@@ -13,7 +13,6 @@ import mozprofile
 
 
 def main():
-    error_state = False
 
     pkg_dir = os.path.split(os.path.abspath(__file__))[0]
 
@@ -94,21 +93,14 @@ def main():
 
     # If host option is specified, connect to proxy
     if args.host:
-        # 0 = random
-        tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        tmp_socket.bind(('127.0.0.1', 0))
-        port = tmp_socket.getsockname()[1]
-        tmp_socket.close()
 
         ssh_dir = tempfile.mkdtemp()
-        cm_path = os.path.join(ssh_dir, args.profile + '_%r@%h:%p')
-        ssh_base = ['ssh', '-S', cm_path, args.host]
+        cm_path = os.path.join(ssh_dir, '%C')
+        ssh_base = ['ssh', '-qS', cm_path, args.host]
 
         if args.config is not None:
             ssh_base += ['-F', args.config]
 
-        cm_connect = ssh_base + ['-fNTM', '-D 127.0.0.1:{:d}'.format(port),
-                                 '-o', 'ExitOnForwardFailure=yes']
         cm_exit = ssh_base + ['-O', 'exit', args.host]
 
         # Exit functions run in reverse order
@@ -118,9 +110,26 @@ def main():
         if args.e:
             atexit.register(rmtree, profile_dir)
 
-        # Connect to proxy
-        if subprocess.check_call(cm_connect) != 0:
-            error_state = True
+        # Get a random ephemeral port
+        for attempt in range(0, 5):
+            tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            tmp_socket.bind(('127.0.0.1', 0))
+            port = tmp_socket.getsockname()[1]
+            tmp_socket.close()
+
+            try:
+                cm_connect = ssh_base + [
+                                '-fNTM',
+                                '-D',
+                                '127.0.0.1:{:d}'.format(port), '-o',
+                                'ExitOnForwardFailure=yes']
+
+                # Connect to the ssh server
+                if subprocess.check_call(cm_connect) == 0:
+                    break
+            except subprocess.CalledProcessError as e:
+                if attempt == 4:
+                    raise(e)
 
         # Set proxy prefs
         prefs_obj.add({
@@ -146,27 +155,25 @@ def main():
                 'https://addons.mozilla.org/firefox/downloads/latest/{}/'
                 .format(addon_name), stream=True)
 
-            if rsp.status_code == 200:
-                handle, name = tempfile.mkstemp(suffix=".xpi")
-                addons_paths.append(name)
-                # Needed to download at reasonable speed
-                addon_io = BytesIO()
-                for chunk in rsp.iter_content(chunk_size=1024):
-                    addon_io.write(chunk)
-                addon_content = addon_io.getvalue()
-                addon_io.close()
-                os.write(handle, addon_content)
-                os.close(handle)
+            rsp.raise_for_status()
 
-                addon_prefs_file = os.path.join(work_dir, 'addon_prefs',
-                                                '{}.js'.format(addon_name))
+            handle, name = tempfile.mkstemp(suffix=".xpi")
+            addons_paths.append(name)
+            # Needed to download at reasonable speed
+            addon_io = BytesIO()
+            for chunk in rsp.iter_content(chunk_size=1024):
+                addon_io.write(chunk)
+            addon_content = addon_io.getvalue()
+            addon_io.close()
+            os.write(handle, addon_content)
+            os.close(handle)
 
-                # Set add-on prefs
-                if os.path.exists(addon_prefs_file):
-                    prefs_obj.add(prefs_obj.read_prefs(addon_prefs_file))
+            addon_prefs_file = os.path.join(work_dir, 'addon_prefs',
+                                            '{}.js'.format(addon_name))
 
-            else:
-                error_state = True
+            # Set add-on prefs
+            if os.path.exists(addon_prefs_file):
+                prefs_obj.add(prefs_obj.read_prefs(addon_prefs_file))
 
     mozprofile.FirefoxProfile(profile=profile_dir,
                               preferences=prefs_obj._prefs,
@@ -176,6 +183,6 @@ def main():
     for addon_path in addons_paths:
         os.unlink(addon_path)
 
-    if not args.d and not error_state:
-        subprocess.call(['firefox', '--new-instance',
-                         '--no-remote', '--profile', profile_dir])
+    if not args.d:
+        subprocess.check_call(['firefox', '--new-instance',
+                               '--no-remote', '--profile', profile_dir])
