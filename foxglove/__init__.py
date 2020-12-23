@@ -5,6 +5,7 @@ import atexit
 import socket
 import argparse
 import tempfile
+import shlex
 from shutil import copyfile, rmtree
 import glob
 from io import BytesIO
@@ -18,29 +19,34 @@ def main():
 
     work_dir = os.path.join(os.path.expanduser('~'), '.foxglove')
 
-    parser = argparse.ArgumentParser(description='Foxglove - a Firefox \
-                                     profile and proxy manager.')
+    parser = argparse.ArgumentParser(description='foxglove - a Firefox \
+                                     profile and proxy manager')
 
-    parser.add_argument('--config', metavar="file", type=str, nargs='?',
-                        default=None, help="Path to an alternate ssh_config \
-                        file to use")
+    parser.add_argument('--config', type=str, metavar="path", default=None,
+                        help="path to a specific ssh config file to use")
 
-    parser.add_argument('profile', type=str,
-                        help="The name of an existing foxglove profile \
-                              or the name of the new profile to create.")
+    parser.add_argument('profile', type=str, help='the name of an existing \
+                        foxglove profile or the name of the new profile to \
+                        create')
 
-    parser.add_argument('host', type=str, nargs='?',
-                        help='ssh server. If this is given, foxglove \
-                             will attempt to establish an ssh connetion to \
-                             the server and configure the browser to use \
-                             it as a SOCKS proxy.')
+    parser.add_argument('host', type=str, nargs='?', help='ssh server. If \
+                        this is given, foxglove will attempt to establish an \
+                        ssh connetion to the server and configure the browser \
+                        to use it as a SOCKS proxy')
+
+    parser.add_argument('--options', type=str, metavar="string", default="",
+                        help='additional options to pass to firefox. \
+                        Space-separated options should be entered as a single \
+                        (e.g., double-quoted) argument.  (--no-remote, \
+                        --new-instance, and --profile <path> will be \
+                        automatically prepended)')
 
     # Note that this will prevent the profile from being saved
     parser.add_argument('-d', action="store_true", default=False,
-                        help='Dry run (don\'t launch browser)')
+                        help='dry run (don\'t launch browser)')
 
     parser.add_argument('-e', action="store_true", default=False,
-                        help='Ephemeral profile (delete on normal exit)')
+                        help='ephemeral browser profile (delete on exit)')
 
     # Parse args before writing to disk (in case of error or -h)
     args = parser.parse_args()
@@ -184,5 +190,6 @@ def main():
         os.unlink(addon_path)
 
     if not args.d:
-        subprocess.check_call(['firefox', '--new-instance',
-                               '--no-remote', '--profile', profile_dir])
+        subprocess.check_call(['firefox'] + ['--new-instance', '--no-remote',
+                                             '--profile', profile_dir] +
+                              shlex.split(args.options))
