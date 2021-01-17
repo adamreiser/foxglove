@@ -97,6 +97,9 @@ def main():
                                                   '*.js')):
         prefs_obj.add(prefs_obj.read_prefs(addon_pref_path))
 
+    if args.e:
+        atexit.register(rmtree, profile_dir)
+
     # If host option is specified, connect to proxy
     if args.host:
 
@@ -112,9 +115,6 @@ def main():
         # Exit functions run in reverse order
         atexit.register(os.rmdir, ssh_dir)
         atexit.register(subprocess.call, cm_exit)
-
-        if args.e:
-            atexit.register(rmtree, profile_dir)
 
         # Get a random ephemeral port
         for attempt in range(0, 5):
