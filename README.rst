@@ -3,6 +3,16 @@ Foxglove - a firefox proxy profile manager
 
 Foxglove is a combined Firefox profile and ssh connection manager with two purposes:
 
+It preloads a number about:config prefs.js options that I consider desirable
+for the majority of my use cases. In general, these make Firefox less chatty
+and the interface less obsequious. Features like "Pocket" are disabled, where
+possible. These options have changed substantially during Firefox's
+development, so some may be unsupported or meaningless in current versions.
+
+Some defaults are known to cause problems, such as
+"privacy.resistFingerprinting", which breaks some websites (and may be
+counterproductive - see https://coveryourtracks.eff.org/learn).
+
 1. Quick creation of Firefox profiles from a template.
 
 2. ssh into a server and automatically configure Firefox to SOCKS
