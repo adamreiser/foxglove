@@ -22,7 +22,7 @@ user_pref("browser.newtabpage.enabled", false);
 user_pref("browser.newtabpage.enhanced", false);
 user_pref("browser.newtabpage.introShown", true);
 user_pref("browser.privatebrowsing.promoEnabled", false);
-user_pref("browser.privatebrowsing.promoTitleEnabled, false);
+user_pref("browser.privatebrowsing.promoTitleEnabled", false);
 user_pref("browser.search.hiddenOneOffs", "Google,Amazon.com,Bing,DuckDuckGo,Wikipedia (en)");
 user_pref("browser.search.suggest.enabled", false);
 user_pref("browser.selfsupport.url", "");
