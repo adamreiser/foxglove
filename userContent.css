@@ -1,0 +1,6 @@
+@-moz-document url("about:privatebrowsing") {
+
+html.private {
+  display: none !important;
+  }
+}

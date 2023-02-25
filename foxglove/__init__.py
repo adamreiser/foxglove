@@ -7,9 +7,6 @@ import argparse
 import tempfile
 import shlex
 from shutil import copyfile, rmtree
-import glob
-from io import BytesIO
-import requests
 import mozprofile
 
 
@@ -25,14 +22,22 @@ def main():
     parser.add_argument('--config', type=str, metavar="path", default=None,
                         help="path to a specific ssh config file to use")
 
-    parser.add_argument('profile', type=str, help='the name of an existing \
-                        foxglove profile or the name of the new profile to \
-                        create')
+    parser.add_argument('--chrome', type=str, metavar="path", default=None,
+                        help="path to a userChrome.css file to add to the \
+                        Firefox profile")
 
-    parser.add_argument('host', type=str, nargs='?', help='ssh server. If \
-                        this is given, foxglove will attempt to establish an \
-                        ssh connetion to the server and configure the browser \
-                        to use it as a SOCKS proxy')
+    parser.add_argument('--content', type=str, metavar="path", default=None,
+                        help="path to a userContent.css file to add to the \
+                        Firefox profile")
+
+    parser.add_argument('profile', type=str, help="The name of the \
+                        foxglove-managed profile to use or create")
+
+    parser.add_argument('host', type=str, nargs='?', help='ssh server \
+                        hostname. If this option is given, foxglove will \
+                        attempt to use ssh(1) with no additional arguments \
+                        to connect to the host and configure the browser to \
+                        use it as a SOCKS proxy')
 
     parser.add_argument('--options', type=str, metavar="string", default="",
                         help='additional options to pass to firefox. \
@@ -43,7 +48,7 @@ def main():
 
     # Note that this will prevent the profile from being saved
     parser.add_argument('-d', action="store_true", default=False,
-                        help='dry run (don\'t launch browser)')
+                        help='dry run (don\'t launch Firefox)')
 
     parser.add_argument('-e', action="store_true", default=False,
                         help='ephemeral browser profile (delete on exit)')
@@ -51,51 +56,19 @@ def main():
     # Parse args before writing to disk (in case of error or -h)
     args = parser.parse_args()
 
-    # Create the working directory
-    if not os.path.isdir(work_dir):
-        os.mkdir(work_dir, 0o700)
+    os.makedirs(work_dir, 0o700, exist_ok=True)
 
     # Create profiles subdirectory
-    if not os.path.isdir(os.path.join(work_dir, 'profiles')):
-        os.mkdir(os.path.join(work_dir, 'profiles'), 0o700)
-
-    # Copy these files to the working directory if not present
-    for data_file in ['prefs.js', 'addons.txt']:
-        if not os.path.exists(os.path.join(work_dir, data_file)):
-            copyfile(os.path.join(pkg_dir, data_file),
-                     os.path.join(work_dir, data_file))
-
-    # Create directory for add-on preferences
-    if not os.path.isdir(os.path.join(work_dir, 'addon_prefs')):
-        os.mkdir(os.path.join(work_dir, 'addon_prefs'), 0o700)
-
-    # Populate add-on preference files from package directory
-    for pref_path in glob.glob(os.path.join(pkg_dir, 'addon_prefs', '*.js')):
-        if not os.path.exists(os.path.join(work_dir, 'addon_prefs',
-                                           os.path.basename(pref_path))):
-            copyfile(pref_path, os.path.join(work_dir, 'addon_prefs',
-                                             os.path.basename(pref_path)))
+    os.makedirs(os.path.join(work_dir, 'profiles'), 0o700, exist_ok=True)
 
     # Set up profile
     profile_dir = os.path.join(work_dir, 'profiles', args.profile)
 
     if not os.path.isdir(profile_dir):
         os.mkdir(profile_dir, 0o700)
-        # Only install add-ons on new profile creation
-        # FIXME automated add-on install is broken at present
-        # install_addons = True
-        install_addons = False
-    else:
-        install_addons = False
 
-    # Preferences set in prefs.js persist across reloads
     prefs_obj = mozprofile.prefs.Preferences()
-    prefs_obj.add(prefs_obj.read_prefs(os.path.join(work_dir, 'prefs.js')))
-
-    # Persist add-on preferences
-    for addon_pref_path in glob.glob(os.path.join(work_dir, 'addon_prefs',
-                                                  '*.js')):
-        prefs_obj.add(prefs_obj.read_prefs(addon_pref_path))
+    prefs_obj.add(prefs_obj.read_prefs(os.path.join(pkg_dir, 'prefs.js')))
 
     if args.e:
         atexit.register(rmtree, profile_dir)
@@ -116,8 +89,10 @@ def main():
         atexit.register(os.rmdir, ssh_dir)
         atexit.register(subprocess.call, cm_exit)
 
-        # Get a random ephemeral port
-        for attempt in range(0, 5):
+        # Get a random ephemeral port and test to see if it's available.  Since
+        # this imposes a TOCTOU race condition, try up to 5 times.
+        max_tries = 5
+        for attempt in range(0, max_tries):
             tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             tmp_socket.bind(('127.0.0.1', 0))
             port = tmp_socket.getsockname()[1]
@@ -134,7 +109,7 @@ def main():
                 if subprocess.check_call(cm_connect) == 0:
                     break
             except subprocess.CalledProcessError as e:
-                if attempt == 4:
+                if attempt == max_tries - 1:
                     raise(e)
 
         # Set proxy prefs
@@ -145,49 +120,20 @@ def main():
             'network.proxy.type': 1
         })
 
-    addons_paths = []
-
-    if install_addons:
-        # Read list of add-ons to install
-        with open(os.path.join(work_dir, 'addons.txt')) as addons_file:
-            addons_list = addons_file.read().splitlines()
-
-        # Filter comments
-        addons_list = [i for i in addons_list if i[0] != '#']
-
-        # mozprofile >=1.0.0 doesn't support automatic XPI downloading
-        for addon_name in addons_list:
-            rsp = requests.get(
-                'https://addons.mozilla.org/firefox/downloads/latest/{}/'
-                .format(addon_name), stream=True)
-
-            rsp.raise_for_status()
-
-            handle, name = tempfile.mkstemp(suffix=".xpi")
-            addons_paths.append(name)
-            # Needed to download at reasonable speed
-            addon_io = BytesIO()
-            for chunk in rsp.iter_content(chunk_size=1024):
-                addon_io.write(chunk)
-            addon_content = addon_io.getvalue()
-            addon_io.close()
-            os.write(handle, addon_content)
-            os.close(handle)
-
-            addon_prefs_file = os.path.join(work_dir, 'addon_prefs',
-                                            '{}.js'.format(addon_name))
-
-            # Set add-on prefs
-            if os.path.exists(addon_prefs_file):
-                prefs_obj.add(prefs_obj.read_prefs(addon_prefs_file))
-
     mozprofile.FirefoxProfile(profile=profile_dir,
                               preferences=prefs_obj._prefs,
-                              addons=addons_paths,
                               restore=False)
 
-    for addon_path in addons_paths:
-        os.unlink(addon_path)
+    if args.chrome:
+        os.makedirs(os.path.join(profile_dir, "chrome"), exist_ok=True)
+
+        copyfile(args.chrome,
+                 os.path.join(profile_dir, "chrome", "userChrome.css"))
+
+    if args.content:
+        os.makedirs(os.path.join(profile_dir, "chrome"), exist_ok=True)
+        copyfile(args.content,
+                 os.path.join(profile_dir, "chrome", "userContent.css"))
 
     if not args.d:
         subprocess.check_call(['firefox'] + ['--new-instance', '--no-remote',
