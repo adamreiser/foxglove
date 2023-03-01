@@ -2,9 +2,10 @@
 
 Foxglove is a Firefox profile and ssh proxy manager with two purposes:
 
-1. Generate Firefox profiles with preferences that I consider desirable for the
-   majority of use cases. These disable, where possible, Firefox's built-in
-   advertising and pop-ups, telemetry, experiments, and similar features.
+1. Programatically generate Firefox profiles with preferences that I consider
+   desirable for the majority of use cases. These disable, where possible,
+   Firefox's built-in advertising, pop-ups, telemetry, experiments, and similar
+   features.
 
 2. Optionally ssh to a remote host and configure the Firefox profile to use
    that connection as a SOCKS proxy.
@@ -19,25 +20,31 @@ foxglove - a Firefox profile and proxy manager
 positional arguments:
   profile           The name of the foxglove-managed profile to use or create
   host              ssh server hostname. If this option is given, foxglove will attempt to use ssh(1) with no additional arguments to
-                    connect to the host and configure the browser to use it as a SOCKS proxy
+                    connect to the host and configure Firefox to use it as a SOCKS proxy
 
 optional arguments:
   -h, --help        show this help message and exit
   --config path     path to a specific ssh config file to use
   --chrome path     path to a userChrome.css file to add to the Firefox profile
   --content path    path to a userContent.css file to add to the Firefox profile
-  --options string  additional options to pass to firefox. Space-separated options should be entered as a single (e.g., double-quoted)
+  --options string  additional options to pass to Firefox. Space-separated options should be entered as a single (e.g., double-quoted)
                     argument. (--no-remote, --new-instance, and --profile <path> will be automatically prepended)
   -d                dry run (don't launch Firefox)
-  -e                ephemeral browser profile (delete on exit)
+  -e                ephemeral profile (delete on exit)
 ```
 
-To use the "host" argument, you would typically specify a Host entry in your
-`~/.ssh/config` with the corresponding name and configure the username, etc. so
-that you can ssh without additional arguments. The remote host must allow port forwarding.
+To use the "host" argument, configure a corresponding Host entry in your
+`~/.ssh/config` such that you can ssh to it with no additional arguments. The
+remote host must allow port forwarding.
 
-Foxglove launches the browser via a subprocess call to "firefox". Setting PATH
-prior to running foxglove can be used to launch a specific version of Firefox.
+Foxglove launches Firefox via a subprocess call to "firefox". On MacOS,
+foxglove first appends `/Applications/Firefox.app/Contents/MacOS` to PATH.
+Prepending a directory to PATH may be used to select a particular Firefox
+installation. For example, you might launch Firefox Nightly on MacOS like this:
+
+```bash
+PATH="/Applications/Firefox Nightly.app/Contents/MacOS:$PATH" foxglove example
+```
 
 All foxglove data including profiles is stored in `~/.foxglove`, which will be
 created on first run. Foxglove will not touch your regular Firefox profiles in
@@ -47,8 +54,8 @@ any way.
 These settings have changed substantially during Firefox's development, so some
 may be unsupported or meaningless in current versions.
 
-Preference changes made to a foxglove-managed profile will reset to the value
-in prefs.js on the next run. To retain changes, you can either use the
+Preference changes made to a foxglove-managed profile will reset to foxglove's
+default values on the next run. To retain changes, you can either use the
 generated profile as a normal Firefox profile without foxglove, or modify your
 installation of foxglove's prefs.js file with your desired preferences.
 

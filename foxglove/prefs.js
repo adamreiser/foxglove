@@ -1,5 +1,6 @@
 user_pref("app.normandy.enabled", false);
 user_pref("app.shield.optoutstudies.enabled", false);
+user_pref("app.update.doorhanger", false);
 user_pref("beacon.enabled", false);
 user_pref("browser.aboutwelcome.enabled", false);
 user_pref("browser.aboutConfig.showWarning", false);

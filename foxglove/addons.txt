@@ -1,3 +1,0 @@
-# addons to install
-#ublock-origin
-#https-everywhere

@@ -1,5 +1,6 @@
 """Foxglove - a Firefox profile and proxy manager."""
 import os
+import platform
 import subprocess
 import atexit
 import socket
@@ -35,12 +36,11 @@ def main():
 
     parser.add_argument('host', type=str, nargs='?', help='ssh server \
                         hostname. If this option is given, foxglove will \
-                        attempt to use ssh(1) with no additional arguments \
-                        to connect to the host and configure the browser to \
-                        use it as a SOCKS proxy')
+                        attempt to use ssh(1) to connect to the host and \
+                        configure Firefox to use it as a SOCKS proxy')
 
     parser.add_argument('--options', type=str, metavar="string", default="",
-                        help='additional options to pass to firefox. \
+                        help='additional options to pass to Firefox. \
                         Space-separated options should be entered as a single \
                         (e.g., double-quoted) argument.  (--no-remote, \
                         --new-instance, and --profile <path> will be \
@@ -51,7 +51,7 @@ def main():
                         help='dry run (don\'t launch Firefox)')
 
     parser.add_argument('-e', action="store_true", default=False,
-                        help='ephemeral browser profile (delete on exit)')
+                        help='ephemeral profile (delete on exit)')
 
     # Parse args before writing to disk (in case of error or -h)
     args = parser.parse_args()
@@ -134,6 +134,12 @@ def main():
         os.makedirs(os.path.join(profile_dir, "chrome"), exist_ok=True)
         copyfile(args.content,
                  os.path.join(profile_dir, "chrome", "userContent.css"))
+
+    if platform.system() == "Darwin":
+        append_path = os.path.join(os.sep, "Applications", "Firefox.app",
+                                   "Contents", "MacOS")
+
+        os.environ["PATH"] os.getenv("PATH") + os.pathsep + append_path
 
     if not args.d:
         subprocess.check_call(['firefox'] + ['--new-instance', '--no-remote',
