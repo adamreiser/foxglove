@@ -139,7 +139,7 @@ def main():
         append_path = os.path.join(os.sep, "Applications", "Firefox.app",
                                    "Contents", "MacOS")
 
-        os.environ["PATH"] os.getenv("PATH") + os.pathsep + append_path
+        os.environ["PATH"] = os.getenv("PATH") + os.pathsep + append_path
 
     if not args.d:
         subprocess.check_call(['firefox'] + ['--new-instance', '--no-remote',
