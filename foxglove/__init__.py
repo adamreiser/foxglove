@@ -7,7 +7,9 @@ import socket
 import argparse
 import tempfile
 import shlex
+from io import BytesIO
 from shutil import copyfile, rmtree
+import requests
 import mozprofile
 
 
@@ -31,7 +33,7 @@ def main():
                         help="path to a userContent.css file to add to the \
                         Firefox profile")
 
-    parser.add_argument('profile', type=str, help="The name of the \
+    parser.add_argument('profile', type=str, help="the name of the \
                         foxglove-managed profile to use or create")
 
     parser.add_argument('host', type=str, nargs='?', help='ssh server \
@@ -52,6 +54,11 @@ def main():
 
     parser.add_argument('-e', action="store_true", default=False,
                         help='ephemeral profile (delete on exit)')
+
+    parser.add_argument('-a', type=str, nargs='?', metavar="add-on",
+                        action="append", default=[], help='download and \
+                        install add-on with this name. May be used multiple \
+                        times')
 
     # Parse args before writing to disk (in case of error or -h)
     args = parser.parse_args()
@@ -110,7 +117,7 @@ def main():
                     break
             except subprocess.CalledProcessError as e:
                 if attempt == max_tries - 1:
-                    raise(e)
+                    raise e
 
         # Set proxy prefs
         prefs_obj.add({
@@ -120,13 +127,31 @@ def main():
             'network.proxy.type': 1
         })
 
+    addon_paths = []
+    for addon_name in args.a:
+        rsp = requests.get(
+            'https://addons.mozilla.org/firefox/downloads/latest/{}'
+            .format(addon_name), stream=True)
+
+        rsp.raise_for_status()
+
+        handle, name = tempfile.mkstemp(suffix=".xpi")
+        addon_paths.append(name)
+        addon_io = BytesIO()
+        for chunk in rsp.iter_content(chunk_size=1024):
+            addon_io.write(chunk)
+        addon_content = addon_io.getvalue()
+        addon_io.close()
+        os.write(handle, addon_content)
+        os.close(handle)
+
     mozprofile.FirefoxProfile(profile=profile_dir,
                               preferences=prefs_obj._prefs,
+                              addons=addon_paths,
                               restore=False)
 
     if args.chrome:
         os.makedirs(os.path.join(profile_dir, "chrome"), exist_ok=True)
-
         copyfile(args.chrome,
                  os.path.join(profile_dir, "chrome", "userChrome.css"))
 
@@ -138,7 +163,6 @@ def main():
     if platform.system() == "Darwin":
         append_path = os.path.join(os.sep, "Applications", "Firefox.app",
                                    "Contents", "MacOS")
-
         os.environ["PATH"] = os.getenv("PATH") + os.pathsep + append_path
 
     if not args.d:
