@@ -6,7 +6,6 @@ import atexit
 import socket
 import argparse
 import tempfile
-import shlex
 from io import BytesIO
 from shutil import copyfile, rmtree
 import requests
@@ -15,23 +14,16 @@ import mozprofile
 
 def main():
 
-    pkg_dir = os.path.split(os.path.abspath(__file__))[0]
-
-    work_dir = os.path.join(os.path.expanduser('~'), '.foxglove')
-
     parser = argparse.ArgumentParser(description='foxglove - a Firefox \
                                      profile and proxy manager')
 
-    parser.add_argument('--config', type=str, metavar="path", default=None,
-                        help="path to a specific ssh config file to use")
-
     parser.add_argument('--chrome', type=str, metavar="path", default=None,
                         help="path to a userChrome.css file to add to the \
-                        Firefox profile")
+                        profile")
 
     parser.add_argument('--content', type=str, metavar="path", default=None,
                         help="path to a userContent.css file to add to the \
-                        Firefox profile")
+                        profile")
 
     parser.add_argument('profile', type=str, help="the name of the \
                         foxglove-managed profile to use or create")
@@ -41,55 +33,35 @@ def main():
                         attempt to use ssh(1) to connect to the host and \
                         configure Firefox to use it as a SOCKS proxy')
 
-    parser.add_argument('--options', type=str, metavar="string", default="",
-                        help='additional options to pass to Firefox. \
-                        Space-separated options should be entered as a single \
-                        (e.g., double-quoted) argument.  (--no-remote, \
-                        --new-instance, and --profile <path> will be \
-                        automatically prepended)')
-
-    # Note that this will prevent the profile from being saved
     parser.add_argument('-d', action="store_true", default=False,
                         help='dry run (don\'t launch Firefox)')
 
     parser.add_argument('-e', action="store_true", default=False,
-                        help='ephemeral profile (delete on exit)')
+                        help='ephemeral (delete profile on exit)')
 
-    parser.add_argument('-a', type=str, nargs='?', metavar="add-on",
-                        action="append", default=[], help='download and \
-                        install add-on with this name. May be used multiple \
-                        times')
+    parser.add_argument('-a', type=str, metavar="add-on", default=[],
+                        action="append", help='download and install this \
+                        add-on. Use the name as it appears in the Mozilla \
+                        add-ons site URL. May be used multiple times')
 
-    # Parse args before writing to disk (in case of error or -h)
     args = parser.parse_args()
 
-    os.makedirs(work_dir, 0o700, exist_ok=True)
-
-    # Create profiles subdirectory
-    os.makedirs(os.path.join(work_dir, 'profiles'), 0o700, exist_ok=True)
-
-    # Set up profile
-    profile_dir = os.path.join(work_dir, 'profiles', args.profile)
-
-    if not os.path.isdir(profile_dir):
-        os.mkdir(profile_dir, 0o700)
+    # Create the profile directory (and any intermediates) if necessary
+    profile_dir = os.path.join(os.path.expanduser('~'), '.foxglove',
+                               'profiles', args.profile)
+    os.makedirs(os.path.join(profile_dir), 0o700, exist_ok=True)
 
     prefs_obj = mozprofile.prefs.Preferences()
-    prefs_obj.add(prefs_obj.read_prefs(os.path.join(pkg_dir, 'prefs.js')))
+    prefs_obj.add(prefs_obj.read_prefs(os.path.join(
+                  os.path.split(os.path.abspath(__file__))[0], 'prefs.js')))
 
     if args.e:
         atexit.register(rmtree, profile_dir)
 
-    # If host option is specified, connect to proxy
     if args.host:
-
         ssh_dir = tempfile.mkdtemp()
         cm_path = os.path.join(ssh_dir, '%C')
         ssh_base = ['ssh', '-qS', cm_path, args.host]
-
-        if args.config is not None:
-            ssh_base += ['-F', args.config]
-
         cm_exit = ssh_base + ['-O', 'exit', args.host]
 
         # Exit functions run in reverse order
@@ -132,17 +104,13 @@ def main():
         rsp = requests.get(
             'https://addons.mozilla.org/firefox/downloads/latest/{}'
             .format(addon_name), stream=True)
-
         rsp.raise_for_status()
-
         handle, name = tempfile.mkstemp(suffix=".xpi")
         addon_paths.append(name)
-        addon_io = BytesIO()
-        for chunk in rsp.iter_content(chunk_size=1024):
-            addon_io.write(chunk)
-        addon_content = addon_io.getvalue()
-        addon_io.close()
-        os.write(handle, addon_content)
+        with BytesIO() as addon_io:
+            for chunk in rsp.iter_content(chunk_size=1024):
+                addon_io.write(chunk)
+            os.write(handle, addon_io.getvalue())
         os.close(handle)
 
     mozprofile.FirefoxProfile(profile=profile_dir,
@@ -161,11 +129,10 @@ def main():
                  os.path.join(profile_dir, "chrome", "userContent.css"))
 
     if platform.system() == "Darwin":
-        append_path = os.path.join(os.sep, "Applications", "Firefox.app",
-                                   "Contents", "MacOS")
-        os.environ["PATH"] = os.getenv("PATH") + os.pathsep + append_path
+        os.environ["PATH"] = os.getenv("PATH") + os.pathsep + os.path.join(
+                             os.sep, "Applications", "Firefox.app", "Contents",
+                             "MacOS")
 
     if not args.d:
         subprocess.check_call(['firefox'] + ['--new-instance', '--no-remote',
-                                             '--profile', profile_dir] +
-                              shlex.split(args.options))
+                                             '--profile', profile_dir])
