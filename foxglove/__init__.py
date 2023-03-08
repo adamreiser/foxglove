@@ -59,7 +59,9 @@ def main():
         atexit.register(rmtree, profile_dir)
 
     if args.host:
-        ssh_dir = tempfile.mkdtemp()
+        # Explicitly specify /tmp or ssh can fail on macOS due to socket path
+        # length limits
+        ssh_dir = tempfile.mkdtemp(dir=os.path.join(os.sep, "tmp"))
         cm_path = os.path.join(ssh_dir, '%C')
         ssh_base = ['ssh', '-qS', cm_path, args.host]
         cm_exit = ssh_base + ['-O', 'exit', args.host]
