@@ -127,7 +127,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "host",
         type=str,
         nargs="?",
-        help="ssh server hostname; foxglove will connect via ssh(1) and configure "
+        help="SSH server hostname; foxglove will connect via ssh(1) and configure "
         "Firefox to use it as a SOCKS proxy",
     )
     parser.add_argument(
@@ -146,7 +146,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "-a",
         type=str,
         metavar="add-on",
-        default=[],
+        default=None,
         action="append",
         help="download and install this add-on (name from the AMO URL); repeatable",
     )
@@ -190,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
             ]
         )
 
-    addon_paths = [_download_addon(name) for name in args.a]
+    addon_paths = [_download_addon(name) for name in (args.a or [])]
 
     try:
         FirefoxProfile(

@@ -30,7 +30,7 @@ class TestBuildParser:
         assert args.host is None
         assert args.d is False
         assert args.e is False
-        assert args.a == []
+        assert args.a is None
         assert args.chrome is None
         assert args.content is None
 
