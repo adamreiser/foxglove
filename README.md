@@ -37,9 +37,14 @@ options:
   --content path  path to a userContent.css file to add to the profile
   -d              dry run (don't launch Firefox)
   -e              ephemeral (delete profile on exit)
-  -a add-on       download and install this add-on (name from the AMO URL);
+  -a add-on       download and install an add-on from addons.mozilla.org;
                   repeatable
 ```
+
+**Add-ons (`-a`).** The value for `-a` is the URL slug after `/firefox/addon/`
+on the [Mozilla Add-ons](https://addons.mozilla.org/) page; for example,
+`https://addons.mozilla.org/firefox/addon/ublock-origin/` → `-a ublock-origin`.
+You can pass `-a` multiple times to install several extensions.
 
 To use the "host" argument, configure a corresponding Host entry in your
 `~/.ssh/config` such that you can ssh to it with no additional arguments. The
