@@ -1,8 +1,6 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* Example UserChrome.css file */
-panelview,
-.panel-arrowcontent{
-  background: #15141a !important;
-  color: #afafab !important;
+:root {
+  --arrowpanel-background: #15141a !important;
+  --arrowpanel-color: #afafab !important;
 }

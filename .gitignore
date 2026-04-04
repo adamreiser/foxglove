@@ -1,6 +1,12 @@
-# general things to ignore
 build/
 dist/
 *.egg-info/
 *.egg
 *.py[cod]
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.whl
