@@ -41,7 +41,7 @@ options:
                   repeatable
 ```
 
-**Add-ons (`-a`).** The value for `-a` is the URL slug after `/firefox/addon/`
+**Add-ons (`-a`) —** The value for `-a` is the URL slug after `/firefox/addon/`
 on the [Mozilla Add-ons](https://addons.mozilla.org/) page; for example,
 `https://addons.mozilla.org/firefox/addon/ublock-origin/` → `-a ublock-origin`.
 You can pass `-a` multiple times to install several extensions.
