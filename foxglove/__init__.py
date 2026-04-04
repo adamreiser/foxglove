@@ -19,10 +19,10 @@ from mozprofile import FirefoxProfile
 from mozprofile.prefs import Preferences
 
 try:
-    from importlib.metadata import version as _version
+    import importlib.metadata as metadata
 
-    __version__ = _version("foxglove")
-except Exception:  # noqa: BLE001
+    __version__ = metadata.version("foxglove")
+except metadata.PackageNotFoundError:
     __version__ = "0.0.0"
 
 FOXGLOVE_DIR = Path.home() / ".foxglove" / "profiles"
@@ -37,9 +37,9 @@ def _start_ssh_tunnel(
     """Start an SSH SOCKS tunnel, returning the control command and bound port.
 
     Finds an available ephemeral port and immediately attempts to start the SSH
-    tunnel on it.  If another process grabs the port in the window between
+    tunnel on it. If another process grabs the port in the window between
     discovery and SSH binding (TOCTOU race), the attempt fails and a new port
-    is selected.  Non-port-related SSH failures (e.g. auth, network) are
+    is selected. Non-port-related SSH failures (e.g. auth, network) are
     re-raised immediately.
     """
     ssh_prefix = ["ssh", "-qS", str(cm_path)]
@@ -64,7 +64,7 @@ def _start_ssh_tunnel(
             return ssh_prefix, host, port
         except subprocess.CalledProcessError as exc:
             # Exit code 255 is SSH's generic connection/forwarding error,
-            # which includes port-bind failures.  Any other code likely
+            # which includes port-bind failures. Any other code likely
             # indicates a non-transient problem (e.g. auth failure).
             if exc.returncode != 255 or attempt == max_attempts - 1:
                 raise
