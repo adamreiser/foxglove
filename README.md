@@ -5,7 +5,7 @@ Foxglove is a Firefox wrapper with two purposes:
 1. Programmatically generate Firefox profiles with preferences that disable,
    where possible, Firefox's built-in advertising, pop-ups, telemetry,
    experiments, and similar features. Generated profiles are stored in
-   `~/.foxglove`.
+   `~/.foxglove/profiles`.
 
 2. Optionally ssh to a remote host and configure the Firefox profile to use
    that connection as a SOCKS proxy.
@@ -21,14 +21,15 @@ pip install foxglove
 ## Usage
 
 ```text
-usage: foxglove [-h] [--chrome path] [--content path] [-d] [-e] [-a add-on] profile [host]
+usage: foxglove [-h] [--chrome path] [--content path] [-d] [-e] [-a add-on]
+                profile [host]
 
 foxglove - a Firefox profile and proxy manager
 
 positional arguments:
   profile         the name of the foxglove-managed profile to use or create
-  host            ssh server hostname. If this option is given, foxglove will attempt to use ssh(1) to connect to the host and configure Firefox to use it
-                  as a SOCKS proxy
+  host            SSH server hostname; foxglove will connect via ssh(1) and
+                  configure Firefox to use it as a SOCKS proxy
 
 options:
   -h, --help      show this help message and exit
@@ -36,7 +37,8 @@ options:
   --content path  path to a userContent.css file to add to the profile
   -d              dry run (don't launch Firefox)
   -e              ephemeral (delete profile on exit)
-  -a add-on       download and install this add-on. Use the name as it appears in the Mozilla add-ons site URL. May be used multiple times
+  -a add-on       download and install this add-on (name from the AMO URL);
+                  repeatable
 ```
 
 To use the "host" argument, configure a corresponding Host entry in your
@@ -86,7 +88,7 @@ Some foxglove defaults to consider changing:
 | Key                               | Default | Foxglove | Comments                                              |
 | --------------------------------- | ------- | -------- | ----------------------------------------------------- |
 | dom.event.clipboardevents.enabled | true    | false    | May break copy/paste on some sites                    |
-| media.peerconnection.enabled      | true    | false    | Breaks video calls (Zoom, Meet, Teams)                |
+| media.peerconnection.enabled      | true    | false    | Breaks video calls                                    |
 | network.trr.mode                  | 0       | 0        | Set to 2 or 3 to enable DNS-over-HTTPS                |
 
 ## Related projects
