@@ -92,6 +92,8 @@ class TestStartSshTunnel:
             "-qS",
             str(cm_path),
             "-fNTM",
+            "-o",
+            "ClearAllForwardings=yes",
             "-D",
             f"127.0.0.1:{port}",
             "-o",
