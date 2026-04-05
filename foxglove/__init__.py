@@ -52,6 +52,8 @@ def _start_ssh_tunnel(
         cm_connect = [
             *ssh_prefix,
             "-fNTM",
+            "-o",
+            "ClearAllForwardings=yes",
             "-D",
             f"127.0.0.1:{port}",
             "-o",
